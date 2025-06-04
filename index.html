@@ -234,115 +234,63 @@
     let countdownInterval = null;
 
     function shuffle(array) {
-      for(let i = array.length -1; i>0; i--){
+      for(let i = array.length - 1; i > 0; i--){
         const j = Math.floor(Math.random() * (i+1));
         [array[i], array[j]] = [array[j], array[i]];
       }
       return array;
     }
 
-    function createCards(level) {
-      const pairCount = levels[level].pairs;
-      totalPairs = pairCount;
-      let selectedEmojis = emojis.slice(0, pairCount);
-      let cardEmojis = [...selectedEmojis, ...selectedEmojis];
-      shuffle(cardEmojis);
+    function startGame(level){
+      levelSelectionEl.style.display = 'none';
+      gameInfo.style.display = 'flex';
+      gameContainer.style.display = 'table';
 
-      const cols = levels[level].cols;
-      const rows = Math.ceil(cardEmojis.length / cols);
+      matchedPairs = 0;
+      score = 0;
+      timer = levels[level].time;
+      totalPairs = levels[level].pairs;
+      scoreEl.textContent = 'Skor: ' + score;
+      timerEl.textContent = 'Süre: ' + timer;
 
+      endScreen.style.display = 'none';
+
+      // Kartları hazırla
+      let selectedEmojis = emojis.slice(0, totalPairs);
+      let cardEmojis = shuffle(selectedEmojis.concat(selectedEmojis));
+
+      // Tabloyu temizle ve doldur
       gameContainer.innerHTML = '';
+
+      const rows = Math.ceil((totalPairs * 2) / levels[level].cols);
+      let cardIndex = 0;
 
       for(let r=0; r<rows; r++){
         const tr = document.createElement('tr');
-        for(let c=0; c<cols; c++){
-          const idx = r*cols + c;
+        for(let c=0; c<levels[level].cols; c++){
+          if(cardIndex >= cardEmojis.length) break;
           const td = document.createElement('td');
-          if(idx < cardEmojis.length){
-            const card = document.createElement('div');
-            card.classList.add('card');
-            card.setAttribute('role', 'button');
-            card.setAttribute('tabindex', '0');
-            card.setAttribute('aria-label', 'Kart');
-            card.dataset.emoji = cardEmojis[idx];
-            card.dataset.index = idx;
-            card.textContent = cardEmojis[idx];
-            card.style.color = 'transparent';
-            card.addEventListener('click', onCardClick);
-            card.addEventListener('keydown', onCardKeyDown);
-            td.appendChild(card);
-          }
+          const card = document.createElement('div');
+          card.classList.add('card');
+          card.setAttribute('tabindex', '0');
+          card.setAttribute('role', 'button');
+          card.setAttribute('aria-label', 'Kart');
+          card.dataset.emoji = cardEmojis[cardIndex];
+          card.textContent = cardEmojis[cardIndex];
+          card.style.color = 'transparent'; // gizle başlangıçta
+          td.appendChild(card);
           tr.appendChild(td);
+          cardIndex++;
         }
         gameContainer.appendChild(tr);
       }
-    }
 
-    function onCardClick(e){
-      if(lockBoard) return;
-      const card = e.currentTarget;
-      if(card === firstCard || card.classList.contains('matched') || card.classList.contains('flipped')) return;
-
-      flipCard(card);
-
-      if(!firstCard){
-        firstCard = card;
-        return;
-      }
-      secondCard = card;
-      checkForMatch();
-    }
-
-    function onCardKeyDown(e){
-      if(e.key === 'Enter' || e.key === ' '){
-        e.preventDefault();
-        e.currentTarget.click();
-      }
-    }
-
-    function flipCard(card){
-      card.classList.add('flipped');
-      card.style.color = '#dd2476';
-    }
-
-    function unflipCards(){
-      lockBoard = true;
-      setTimeout(() => {
-        firstCard.classList.remove('flipped');
-        firstCard.style.color = 'transparent';
-        secondCard.classList.remove('flipped');
-        secondCard.style.color = 'transparent';
-        resetBoard();
-      }, 1000);
-    }
-
-    function checkForMatch(){
-      if(firstCard.dataset.emoji === secondCard.dataset.emoji){
-        firstCard.classList.add('matched');
-        secondCard.classList.add('matched');
-        matchedPairs++;
-        score += 10;
-        scoreEl.textContent = 'Skor: ' + score;
-        resetBoard();
-        if(matchedPairs === totalPairs){
-          finishGame(true);
-        }
-      } else {
-        score -= 2;
-        if(score < 0) score = 0;
-        scoreEl.textContent = 'Skor: ' + score;
-        unflipCards();
-      }
-    }
-
-    function resetBoard(){
-      [firstCard, secondCard] = [null, null];
+      firstCard = null;
+      secondCard = null;
       lockBoard = false;
-    }
 
-    function startTimer(duration){
-      timer = duration;
-      timerEl.textContent = 'Süre: ' + timer;
+      // Zamanlayıcı başlat
+      clearInterval(countdownInterval);
       countdownInterval = setInterval(() => {
         timer--;
         timerEl.textContent = 'Süre: ' + timer;
@@ -353,51 +301,81 @@
       }, 1000);
     }
 
-    function finishGame(win){
-      clearInterval(countdownInterval);
+    function unflipCards(){
       lockBoard = true;
-      endScreen.style.display = 'block';
-      gameContainer.style.display = 'none';
-      gameInfo.style.display = 'none';
-      levelSelectionEl.style.display = 'flex';
-
-      endMessage.textContent = win
-        ? `Tebrikler! Skorunuz: ${score}`
-        : `Süre doldu! Skorunuz: ${score}`;
+      setTimeout(() => {
+        if(firstCard) firstCard.style.color = 'transparent';
+        if(secondCard) secondCard.style.color = 'transparent';
+        firstCard = null;
+        secondCard = null;
+        lockBoard = false;
+      }, 1000);
     }
 
-    function restartGame(){
-      endScreen.style.display = 'none';
-      matchedPairs = 0;
-      score = 0;
-      scoreEl.textContent = 'Skor: 0';
-      resetBoard();
-      levelSelectionEl.style.display = 'flex';
-      gameContainer.style.display = 'none';
-      gameInfo.style.display = 'none';
+    function finishGame(won){
+      lockBoard = true;
+      clearInterval(countdownInterval);
+      endScreen.style.display = 'block';
+      if(won){
+        endMessage.textContent = `Tebrikler! Skorunuz: ${score}`;
+      } else {
+        endMessage.textContent = `Süre doldu! Skorunuz: ${score}`;
+      }
+    }
+
+    function cardClicked(e){
+      const clickedCard = e.target;
+      if(lockBoard) return;
+      if(clickedCard === firstCard) return;
+      if(clickedCard.classList.contains('matched')) return;
+
+      clickedCard.style.color = '#dd2476';
+
+      if(!firstCard){
+        firstCard = clickedCard;
+        return;
+      }
+      secondCard = clickedCard;
+
+      if(firstCard.dataset.emoji === secondCard.dataset.emoji){
+        firstCard.classList.add('matched');
+        secondCard.classList.add('matched');
+        score += 10;
+        scoreEl.textContent = 'Skor: ' + score;
+        matchedPairs++;
+        firstCard = null;
+        secondCard = null;
+        if(matchedPairs === totalPairs){
+          finishGame(true);
+        }
+      } else {
+        // Yanlış seçim yapıldığında puan azalmayacak, sadece kartlar geri dönecek
+        unflipCards();
+      }
     }
 
     levelSelectionEl.addEventListener('click', e => {
-      if(e.target.tagName !== 'BUTTON') return;
-
-      Array.from(levelSelectionEl.children).forEach(btn => btn.setAttribute('aria-pressed', 'false'));
-      e.target.setAttribute('aria-pressed', 'true');
-
-      const level = e.target.dataset.level;
-      createCards(level);
-      matchedPairs = 0;
-      score = 0;
-      scoreEl.textContent = 'Skor: 0';
-
-      gameContainer.style.display = 'table';
-      gameInfo.style.display = 'flex';
-      levelSelectionEl.style.display = 'none';
-      endScreen.style.display = 'none';
-
-      startTimer(levels[level].time);
+      if(e.target.tagName === 'BUTTON'){
+        const level = e.target.dataset.level;
+        startGame(level);
+      }
     });
 
-    restartBtn.addEventListener('click', restartGame);
+    gameContainer.addEventListener('click', e => {
+      if(e.target.classList.contains('card')){
+        cardClicked(e);
+      }
+    });
+
+    restartBtn.addEventListener('click', () => {
+      endScreen.style.display = 'none';
+      levelSelectionEl.style.display = 'flex';
+      gameContainer.style.display = 'none';
+      gameInfo.style.display = 'none';
+    });
   </script>
+  <footer>Bu oyun <strong>Taha Özdemir</strong> tarafından geliştirilmiştir.</footer>
+</body>
 </body>
 </html>
+
