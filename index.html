@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kart Eşleştirme Oyunu</title>
+<style>
+  /* Genel Body */
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #70e1f5, #ffd194);
+    color: #333;
+    margin: 0; padding: 20px;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+    transition: background 0.5s ease, color 0.5s ease;
+  }
+
+  /* Dark tema */
+  body.dark-theme {
+    background: linear-gradient(135deg, #1f1c2c, #928dab);
+    color: #eee;
+  }
+
+  h1 {
+    margin-bottom: 12px;
+    font-weight: 900;
+    font-size: 2.6rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  }
+
+  /* Seviye Seçim Butonları */
+  #level-selection {
+    margin-bottom: 18px;
+  }
+
+  #level-selection button {
+    margin: 0 10px;
+    padding: 12px 22px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    background: linear-gradient(45deg, #ff416c, #ff4b2b);
+    color: white;
+    box-shadow: 0 4px 12px rgba(255,75,43,0.5);
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+
+  #level-selection button:hover {
+    background: linear-gradient(45deg, #ff4b2b, #ff416c);
+    transform: scale(1.1);
+  }
+
+  /* Tema toggle */
+  #theme-toggle {
+    margin: 10px 0 18px 0;
+    font-weight: 600;
+    font-size: 1.05rem;
+    user-select: none;
+  }
+  #theme-toggle input[type="checkbox"] {
+    margin-right: 8px;
+    transform: scale(1.3);
+    vertical-align: middle;
+    cursor: pointer;
+  }
+
+  /* Oyun Bilgi Paneli */
+  #game-info {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 18px;
+    padding: 14px 24px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 20px;
+    box-shadow: 0 8px 15px rgba(255, 75, 43, 0.35);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #ff4b2b;
+    user-select: none;
+    transition: background 0.5s ease, color 0.5s ease;
+  }
+
+  /* Dark tema oyun info */
+  body.dark-theme #game-info {
+    background: rgba(34, 34, 34, 0.85);
+    color: #ff8551;
+    box-shadow: 0 8px 15px rgba(255, 133, 81, 0.6);
+  }
+
+  /* Oyun alanı */
+  #game-container {
+    display: grid;
+    max-width: 600px;
+    margin: 0 auto;
+    gap: 8px;
+    user-select: none;
+  }
+
+  .card {
+    background: #fff8f0;
+    border-radius: 15px;
+    font-size: 3.2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 6px 12px rgba(255, 75, 43, 0.3);
+    transition: transform 0.3s ease, filter 0.3s ease;
+    color: transparent;
+    filter: brightness(65%);
+    user-select: none;
+  }
+
+  .card.flipped, .card.matched {
+    color: #ff4b2b;
+    filter: brightness(100%);
+    cursor: default;
+  }
+
+  .card.matched {
+    cursor: default;
+  }
+
+  /* Eşleşme animasyonu */
+  .card.animate-match {
+    animation: scaleUpDown 0.6s forwards;
+  }
+
+  @keyframes scaleUpDown {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+  }
+
+  /* Oyun bitiş ekranı */
+  #end-screen {
+    display: none;
+    text-align: center;
+    margin-top: 30px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    user-select: none;
+  }
+  #end-screen button {
+    margin-top: 20px;
+    padding: 14px 28px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    background: linear-gradient(45deg, #ff416c, #ff4b2b);
+    color: white;
+    box-shadow: 0 6px 15px rgba(255, 75, 43, 0.6);
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  #end-screen button:hover {
+    background: linear-gradient(45deg, #ff4b2b, #ff416c);
+    transform: scale(1.1);
+  }
+
+  /* Dark tema end screen */
+  body.dark-theme #end-screen {
+    color: #ff8551;
+  }
+  body.dark-theme #end-screen button {
+    background: linear-gradient(45deg, #ff8551, #ffb580);
+    box-shadow: 0 6px 15px rgba(255, 133, 81, 0.8);
+  }
+  body.dark-theme #end-screen button:hover {
+    background: linear-gradient(45deg, #ffb580, #ff8551);
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    #game-container {
+      max-width: 100%;
+      gap: 6px;
+    }
+    .card {
+      font-size: 2.6rem;
+      border-radius: 12px;
+    }
+    #game-info {
+      font-size: 1.1rem;
+      max-width: 100%;
+      padding: 12px 18px;
+    }
+    #level-selection button {
+      padding: 10px 18px;
+      font-size: 1rem;
+      margin: 0 6px;
+    }
+    #end-screen {
+      font-size: 1.3rem;
+    }
+    #end-screen button {
+      padding: 12px 24px;
+      font-size: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h1>Kart Eşleştirme Oyunu</h1>
+
+<div id="level-selection" aria-label="Zorluk seviyesi seçimi">
+  <button data-level="easy" aria-pressed="false">Kolay</button>
+  <button data-level="medium" aria-pressed="false">Orta</button>
+  <button data-level="hard" aria-pressed="false">Zor</button>
+</div>
+
+<div id="theme-toggle">
+  <label>
+    <input type="checkbox" id="theme-checkbox" aria-checked="false" />
+    Koyu Tema
+  </label>
+</div>
+
+<div id="game-info" style="display:none;" role="region" aria-live="polite">
+  <div id="score" aria-label="Skor">Skor: 0</div>
+  <div id="timer" aria-label="Kalan süre">Süre: 0</div>
+</div>
+
+<div id="game-container" style="display:none;" aria-live="polite" aria-label="Oyun kartları"></div>
+
+<div id="end-screen" role="alert" aria-live="assertive">
+  <div id="end-message"></div>
+  <button id="restart-btn">Yeniden Oyna</button>
+</div>
+
+<script>
+  const gameContainer = document.getElementById('game-container');
+  const scoreEl = document.getElementById('score');
+  const timerEl = document.getElementById('timer');
+  const levelSelectionEl = document.getElementById('level-selection');
+  const gameInfo = document.getElementById('game-info');
+  const endScreen = document.getElementById('end-screen');
+  const endMessage = document.getElementById('end-message');
+  const restartBtn = document.getElementById('restart-btn');
+  const themeCheckbox = document.getElementById('theme-checkbox');
+
+  const emojis = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦉'];
+
+  const levels = {
+    easy: { rows: 2, cols: 3, pairs: 3, time: 30 },
+    medium: { rows: 4, cols: 4, pairs: 8, time: 45 },
+    hard: { rows: 4, cols: 5, pairs: 10, time: 60 },
+  };
+
+  let firstCard = null;
+  let secondCard = null;
+  let score = 0;
+  let timeLeft = 0;
+  let timerInterval = null;
+  let matchedCount = 0;
+  let selectedLevel = null;
+
+  function shuffleArray(array) {
+    for(let i = array.length -1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i +1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
+  function startGame(levelKey) {
+    selectedLevel = levels[levelKey];
+    score = 0;
+    timeLeft = selectedLevel.time;
+    matchedCount = 0;
+
+    scoreEl.innerText = `Skor: ${score}`;
+    timerEl.innerText = `Süre: ${timeLeft}`;
+    levelSelectionEl.style.display = 'none';
+    gameInfo.style.display = 'flex';
+    gameContainer.style.display = 'grid';
+    endScreen.style.display = 'none';
+
+    gameContainer.style.gridTemplateColumns = `repeat(${selectedLevel.cols}, 1fr)`;
+
+    // Kartları oluştur
+    let cards = [];
+    for(let i=0; i < selectedLevel.pairs; i++) {
+      cards.push(emojis[i]);
+      cards.push(emojis[i]);
+    }
+    shuffleArray(cards);
+
+    gameContainer.innerHTML = '';
+    cards.forEach((emoji, index) => {
+      const card = document.createElement('div');
+      card.classList.add('card');
+      card.dataset.emoji = emoji;
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', 0);
+      card.setAttribute('aria-label', 'Kapalı kart');
+      card.innerText = emoji;
+      card.style.color = 'transparent';
+      card.addEventListener('click', () => onCardClick(card));
+      card.addEventListener('keydown', e => {
+        if(e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onCardClick(card);
+        }
+      });
+      gameContainer.appendChild(card);
+    });
+
+    // Zamanlayıcı başlat
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      timerEl.innerText = `Süre: ${timeLeft}`;
+      if(timeLeft <= 0) {
+        clearInterval(timerInterval);
+        endGame(false);
+      }
+    }, 1000);
+  }
+
+  function onCardClick(card) {
+    if(card.classList.contains('flipped') || card.classList.contains('matched')) return;
+    if(secondCard) return;
+
+    card.classList.add('flipped');
+    card.style.color = '#ff4b2b';
+    card.setAttribute('aria-label', 'Açık kart');
+
+    if(!firstCard) {
+      firstCard = card;
+      return;
+    }
+
+    secondCard = card;
+
+    if(firstCard.dataset.emoji === secondCard.dataset.emoji) {
+      // Eşleşme
+      firstCard.classList.add('matched', 'animate-match');
+      secondCard.classList.add('matched', 'animate-match');
+
+      score += 10;
+      matchedCount++;
+      scoreEl.innerText = `Skor: ${score}`;
+
+      setTimeout(() => {
+        firstCard.classList.remove('animate-match');
+        secondCard.classList.remove('animate-match');
+        firstCard = null;
+        secondCard = null;
+
+        if(matchedCount === selectedLevel.pairs) {
+          clearInterval(timerInterval);
+          endGame(true);
+        }
+      }, 600);
+    } else {
+      // Eşleşmedi
+      score = Math.max(0, score - 2);
+      scoreEl.innerText = `Skor: ${score}`;
+      setTimeout(() => {
+        firstCard.classList.remove('flipped');
+        firstCard.style.color = 'transparent';
+        firstCard.setAttribute('aria-label', 'Kapalı kart');
+
+        secondCard.classList.remove('flipped');
+        secondCard.style.color = 'transparent';
+        secondCard.setAttribute('aria-label', 'Kapalı kart');
+
+        firstCard = null;
+        secondCard = null;
+      }, 1000);
+    }
+  }
+
+  function endGame(won) {
+    gameInfo.style.display = 'none';
+    gameContainer.style.display = 'none';
+    endScreen.style.display = 'block';
+
+    if(won) {
+      endMessage.innerHTML = `Tebrikler! Oyunu kazandınız.<br>Skorunuz: ${score}`;
+    } else {
+      endMessage.innerHTML = `Süre doldu! Oyunu kaybettiniz.<br>Skorunuz: ${score}`;
+    }
+  }
+
+  restartBtn.addEventListener('click', () => {
+    endScreen.style.display = 'none';
+    levelSelectionEl.style.display = 'block';
+  });
+
+  // Seviye seçim butonları
+  levelSelectionEl.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      startGame(btn.dataset.level);
+    });
+  });
+
+  // Tema toggle
+  themeCheckbox.addEventListener('change', () => {
+    if(themeCheckbox.checked) {
+      document.body.classList.add('dark-theme');
+      themeCheckbox.setAttribute('aria-checked', 'true');
+    } else {
+      document.body.classList.remove('dark-theme');
+      themeCheckbox.setAttribute('aria-checked', 'false');
+    }
+  });
+</script>
+
+</body>
+</html>
