@@ -5,66 +5,66 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Kart Eşleştirme Oyunu</title>
   <style>
-    /* Genel stil */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0; padding: 20px;
-      background: linear-gradient(135deg, #f9f9f9, #e2e2e2);
+      background: linear-gradient(135deg, #43cea2, #185a9d, #f7971e, #ffd200);
+      background-size: 400% 400%;
+      animation: gradientBG 20s ease infinite;
       color: #333;
       display: flex;
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
-      transition: background 0.5s ease;
+    }
+
+    @keyframes gradientBG {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
     }
 
     h1 {
       font-size: 2.5rem;
-      margin-bottom: 10px;
-      color: #ff4b2b;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+      color: #fff;
+      text-shadow: 1px 1px 6px rgba(0,0,0,0.6);
     }
 
-    /* Mod Seçiniz Başlığı */
     #mod-title {
-      text-align: center;
-      margin-bottom: 16px;
       font-weight: 700;
-      color: #ff4b2b;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.15);
-      font-size: 1.5rem;
+      color: #fff;
+      margin-bottom: 15px;
+      text-shadow: 1px 1px 5px rgba(0,0,0,0.5);
     }
 
-    /* Seviye seçimi butonları */
     #level-selection {
       display: flex;
       gap: 12px;
       margin-bottom: 20px;
-      flex-wrap: wrap;
       justify-content: center;
+      flex-wrap: wrap;
     }
-
     #level-selection button {
-      background: linear-gradient(135deg, #ff6b6b, #ff4b2b);
+      background: linear-gradient(135deg, #ff512f, #dd2476);
       border: none;
       padding: 12px 28px;
       color: white;
       font-size: 1.1rem;
       border-radius: 12px;
       cursor: pointer;
-      box-shadow: 0 4px 8px rgba(255,75,43,0.3);
+      box-shadow: 0 4px 8px rgba(221,36,118,0.5);
       transition: all 0.3s ease;
-      min-width: 100px;
       user-select: none;
+      min-width: 100px;
     }
     #level-selection button:hover,
     #level-selection button:focus {
-      background: linear-gradient(135deg, #ff4b2b, #ff2c00);
+      background: linear-gradient(135deg, #dd2476, #ff512f);
       outline: none;
-      box-shadow: 0 6px 12px rgba(255,43,0,0.6);
+      box-shadow: 0 6px 14px rgba(255,81,47,0.7);
     }
 
-    /* Oyun bilgileri (skor ve süre) */
     #game-info {
       display: flex;
       justify-content: space-around;
@@ -73,29 +73,40 @@
       font-size: 1.2rem;
       font-weight: 600;
       color: #222;
-      background: #fff;
+      background: rgba(255 255 255 / 0.9);
       padding: 8px 12px;
       border-radius: 14px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       user-select: none;
     }
 
-    /* Oyun alanı grid */
+    /* Tablo oyunu kapsayan alan */
     #game-container {
-      display: grid;
-      gap: 10px;
-      justify-content: center;
-      max-width: 480px;
-      margin-bottom: 20px;
+      border-collapse: collapse;
+      background: rgba(255 255 255 / 0.9);
+      border-radius: 16px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      max-width: 440px;
+      width: 100%;
     }
 
-    /* Kartlar */
+    /* Satırlar */
+    #game-container tr {}
+
+    /* Hücreler */
+    #game-container td {
+      padding: 4px 4px; /* az boşluk, kartlar birbirine yakın */
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    /* Kart */
     .card {
       background: #fff;
       border-radius: 12px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.12);
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       justify-content: center;
       align-items: center;
       font-size: 3.5rem;
@@ -103,33 +114,36 @@
       color: transparent;
       transition: color 0.3s ease, transform 0.3s ease;
       aspect-ratio: 1 / 1;
+      width: 70px;
+      height: 70px;
+      margin: 0; /* boşlukları kaldırdık, kartlar sıkı */
     }
     .card.flipped {
-      color: #ff4b2b;
-      background: #fff9f8;
+      color: #dd2476;
+      background: #fff0f5;
       transform: scale(1.05);
-      box-shadow: 0 8px 16px rgba(255,75,43,0.3);
+      box-shadow: 0 8px 18px rgba(221,36,118,0.4);
     }
     .card.matched {
-      color: #ff4b2b;
-      background: #ffe6e1;
+      color: #dd2476;
+      background: #ffc9dc;
       cursor: default;
-      box-shadow: 0 6px 10px rgba(255,75,43,0.6);
+      box-shadow: 0 6px 12px rgba(221,36,118,0.7);
       transform: scale(1.1);
       transition: transform 0.5s ease;
     }
 
-    /* Oyun bitti ekranı */
     #end-screen {
       display: none;
       text-align: center;
       padding: 20px;
       max-width: 320px;
-      background: #fff;
+      background: rgba(255 255 255 / 0.95);
       border-radius: 16px;
       box-shadow: 0 4px 14px rgba(0,0,0,0.15);
-      color: #ff4b2b;
+      color: #dd2476;
       font-weight: 700;
+      margin-top: 20px;
     }
     #end-screen button {
       margin-top: 14px;
@@ -137,23 +151,20 @@
       font-size: 1.1rem;
       border-radius: 10px;
       border: none;
-      background: #ff4b2b;
+      background: #dd2476;
       color: white;
       cursor: pointer;
-      box-shadow: 0 4px 8px rgba(255,75,43,0.4);
+      box-shadow: 0 4px 8px rgba(221,36,118,0.5);
       transition: background 0.3s ease;
     }
     #end-screen button:hover,
     #end-screen button:focus {
-      background: #e03e20;
+      background: #b71c58;
       outline: none;
     }
 
     /* Responsive */
     @media (max-width: 600px) {
-      body {
-        padding: 10px;
-      }
       #game-info {
         width: 100%;
         max-width: 360px;
@@ -163,6 +174,8 @@
       }
       .card {
         font-size: 2.8rem;
+        width: 55px;
+        height: 55px;
       }
       #level-selection button {
         min-width: 80px;
@@ -174,7 +187,6 @@
 </head>
 <body>
   <h1>Kart Eşleştirme Oyunu</h1>
-
   <h2 id="mod-title">Mod Seçiniz</h2>
 
   <div id="level-selection" aria-label="Zorluk seviyesi seçimi">
@@ -188,7 +200,7 @@
     <div id="timer">Süre: 45</div>
   </div>
 
-  <div id="game-container" style="display:none;" role="grid" aria-label="Oyun kartları alanı"></div>
+  <table id="game-container" style="display:none;" role="grid" aria-label="Oyun kartları alanı"></table>
 
   <div id="end-screen" role="alert" aria-live="assertive">
     <div id="end-message"></div>
@@ -214,148 +226,178 @@
 
     let firstCard = null;
     let secondCard = null;
+    let lockBoard = false;
+    let matchedPairs = 0;
+    let totalPairs = 0;
     let score = 0;
-    let matchedCount = 0;
-    let timerInterval = null;
-    let timeLeft = 0;
-    let selectedLevel = null;
+    let timer = 0;
+    let countdownInterval = null;
 
-    function shuffleArray(arr) {
-      for(let i = arr.length -1; i > 0; i--) {
+    function shuffle(array) {
+      for(let i = array.length -1; i>0; i--){
         const j = Math.floor(Math.random() * (i+1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+        [array[i], array[j]] = [array[j], array[i]];
       }
+      return array;
     }
 
-    function startGame(levelKey) {
-      selectedLevel = levels[levelKey];
-      timeLeft = selectedLevel.time;
-      score = 0;
-      matchedCount = 0;
-      firstCard = null;
-      secondCard = null;
+    function createCards(level) {
+      const pairCount = levels[level].pairs;
+      totalPairs = pairCount;
+      let selectedEmojis = emojis.slice(0, pairCount);
+      let cardEmojis = [...selectedEmojis, ...selectedEmojis];
+      shuffle(cardEmojis);
 
-      levelSelectionEl.style.display = 'none';
-      gameInfo.style.display = 'flex';
-      gameContainer.style.display = 'grid';
-      endScreen.style.display = 'none';
-
-      gameContainer.style.gridTemplateColumns = `repeat(${selectedLevel.cols}, 1fr)`;
-
-      // Kartları oluştur
-      let cards = [];
-      for(let i=0; i < selectedLevel.pairs; i++) {
-        cards.push(emojis[i]);
-        cards.push(emojis[i]);
-      }
-      shuffleArray(cards);
+      const cols = levels[level].cols;
+      const rows = Math.ceil(cardEmojis.length / cols);
 
       gameContainer.innerHTML = '';
-      cards.forEach((emoji) => {
-        const card = document.createElement('div');
-        card.classList.add('card');
-        card.dataset.emoji = emoji;
-        card.setAttribute('role', 'button');
-        card.setAttribute('tabindex', 0);
-        card.setAttribute('aria-label', 'Kapalı kart');
-        card.innerText = emoji;
-        card.style.color = 'transparent';
-        card.addEventListener('click', () => onCardClick(card));
-        card.addEventListener('keydown', e => {
-          if(e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onCardClick(card);
+
+      for(let r=0; r<rows; r++){
+        const tr = document.createElement('tr');
+        for(let c=0; c<cols; c++){
+          const idx = r*cols + c;
+          const td = document.createElement('td');
+          if(idx < cardEmojis.length){
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.setAttribute('role', 'button');
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('aria-label', 'Kart');
+            card.dataset.emoji = cardEmojis[idx];
+            card.dataset.index = idx;
+            card.textContent = cardEmojis[idx];
+            card.style.color = 'transparent';
+            card.addEventListener('click', onCardClick);
+            card.addEventListener('keydown', onCardKeyDown);
+            td.appendChild(card);
           }
-        });
-        gameContainer.appendChild(card);
-      });
-
-      // Zamanlayıcı başlat
-      clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        timerEl.innerText = `Süre: ${timeLeft}`;
-        if(timeLeft <= 0) {
-          clearInterval(timerInterval);
-          endGame(false);
+          tr.appendChild(td);
         }
-      }, 1000);
-
-      scoreEl.innerText = `Skor: ${score}`;
+        gameContainer.appendChild(tr);
+      }
     }
 
-    function onCardClick(card) {
-      if(card.classList.contains('flipped') || card.classList.contains('matched')) return;
-      if(secondCard) return;
+    function onCardClick(e){
+      if(lockBoard) return;
+      const card = e.currentTarget;
+      if(card === firstCard || card.classList.contains('matched') || card.classList.contains('flipped')) return;
 
-      card.classList.add('flipped');
-      card.style.color = '#ff4b2b';
-      card.setAttribute('aria-label', 'Açık kart');
+      flipCard(card);
 
-      if(!firstCard) {
+      if(!firstCard){
         firstCard = card;
         return;
       }
-
       secondCard = card;
+      checkForMatch();
+    }
 
-      if(firstCard.dataset.emoji === secondCard.dataset.emoji) {
-        // Eşleşme
+    function onCardKeyDown(e){
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        e.currentTarget.click();
+      }
+    }
+
+    function flipCard(card){
+      card.classList.add('flipped');
+      card.style.color = '#dd2476';
+    }
+
+    function unflipCards(){
+      lockBoard = true;
+      setTimeout(() => {
+        firstCard.classList.remove('flipped');
+        firstCard.style.color = 'transparent';
+        secondCard.classList.remove('flipped');
+        secondCard.style.color = 'transparent';
+        resetBoard();
+      }, 1000);
+    }
+
+    function checkForMatch(){
+      if(firstCard.dataset.emoji === secondCard.dataset.emoji){
         firstCard.classList.add('matched');
         secondCard.classList.add('matched');
-
+        matchedPairs++;
         score += 10;
-        matchedCount++;
-        scoreEl.innerText = `Skor: ${score}`;
-
-        setTimeout(() => {
-          firstCard = null;
-          secondCard = null;
-
-          if(matchedCount === selectedLevel.pairs) {
-            clearInterval(timerInterval);
-            endGame(true);
-          }
-        }, 600);
+        scoreEl.textContent = 'Skor: ' + score;
+        resetBoard();
+        if(matchedPairs === totalPairs){
+          finishGame(true);
+        }
       } else {
-        setTimeout(() => {
-          firstCard.classList.remove('flipped');
-          firstCard.style.color = 'transparent';
-          firstCard.setAttribute('aria-label', 'Kapalı kart');
-
-          secondCard.classList.remove('flipped');
-          secondCard.style.color = 'transparent';
-          secondCard.setAttribute('aria-label', 'Kapalı kart');
-
-          firstCard = null;
-          secondCard = null;
-        }, 1000);
+        score -= 2;
+        if(score < 0) score = 0;
+        scoreEl.textContent = 'Skor: ' + score;
+        unflipCards();
       }
     }
 
-    function endGame(won) {
-      gameInfo.style.display = 'none';
-      gameContainer.style.display = 'none';
+    function resetBoard(){
+      [firstCard, secondCard] = [null, null];
+      lockBoard = false;
+    }
+
+    function startTimer(duration){
+      timer = duration;
+      timerEl.textContent = 'Süre: ' + timer;
+      countdownInterval = setInterval(() => {
+        timer--;
+        timerEl.textContent = 'Süre: ' + timer;
+        if(timer <= 0){
+          clearInterval(countdownInterval);
+          finishGame(false);
+        }
+      }, 1000);
+    }
+
+    function finishGame(win){
+      clearInterval(countdownInterval);
+      lockBoard = true;
       endScreen.style.display = 'block';
+      gameContainer.style.display = 'none';
+      gameInfo.style.display = 'none';
+      levelSelectionEl.style.display = 'flex';
 
-      if(won) {
-        endMessage.innerHTML = `Tebrikler! Oyunu kazandınız.<br>Skorunuz: ${score}`;
-      } else {
-        endMessage.innerHTML = `Süre doldu! Oyunu kaybettiniz.<br>Skorunuz: ${score}`;
-      }
+      endMessage.textContent = win
+        ? `Tebrikler! Skorunuz: ${score}`
+        : `Süre doldu! Skorunuz: ${score}`;
     }
 
-    restartBtn.addEventListener('click', () => {
+    function restartGame(){
       endScreen.style.display = 'none';
+      matchedPairs = 0;
+      score = 0;
+      scoreEl.textContent = 'Skor: 0';
+      resetBoard();
       levelSelectionEl.style.display = 'flex';
+      gameContainer.style.display = 'none';
+      gameInfo.style.display = 'none';
+    }
+
+    levelSelectionEl.addEventListener('click', e => {
+      if(e.target.tagName !== 'BUTTON') return;
+
+      Array.from(levelSelectionEl.children).forEach(btn => btn.setAttribute('aria-pressed', 'false'));
+      e.target.setAttribute('aria-pressed', 'true');
+
+      const level = e.target.dataset.level;
+      createCards(level);
+      matchedPairs = 0;
+      score = 0;
+      scoreEl.textContent = 'Skor: 0';
+
+      gameContainer.style.display = 'table';
+      gameInfo.style.display = 'flex';
+      levelSelectionEl.style.display = 'none';
+      endScreen.style.display = 'none';
+
+      startTimer(levels[level].time);
     });
 
-    // Seviye seçim butonları
-    levelSelectionEl.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        startGame(btn.dataset.level);
-      });
-    });
+    restartBtn.addEventListener('click', restartGame);
   </script>
 </body>
 </html>
